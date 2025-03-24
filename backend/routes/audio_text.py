@@ -3,6 +3,5 @@ from fastapi import APIRouter
 router = APIRouter()
 
 @router.get("/")
-def detect_audio_fake():
-    return {"message": "Audio & Text deepfake detection API"}
-
+def get_audio_text_status():
+    return {"message": "Audio-Text detection API is working!"}
