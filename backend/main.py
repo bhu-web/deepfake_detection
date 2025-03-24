@@ -1,12 +1,10 @@
 from fastapi import FastAPI
-from backend.routes import image_video, audio_text
+from backend.routes import audio_text  # Remove image_video
 
 app = FastAPI()
 
-# Include routes
-app.include_router(image_video.router, prefix="/image-video")
-app.include_router(audio_text.router, prefix="/audio-text")  # Ensure this line is added
+app.include_router(audio_text.router, prefix="/audio-text")  # Only this
 
 @app.get("/")
 def home():
-    return {"message": "Deepfake Detection API is running!"}
+    return {"message": "Audio-Text Deepfake Detection API is running!"}
