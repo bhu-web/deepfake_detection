@@ -1,27 +1,39 @@
-import os, random, shutil
+import tensorflow as tf
+from tensorflow.keras.applications import Xception
+from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
+from tensorflow.keras.models import Model
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.callbacks import ReduceLROnPlateau, ModelCheckpoint, EarlyStopping
+from load_dataset import train_data, test_data  # Import dataset
 
-# Paths
-train_real = r"C:\Users\bhoom\datasets\deepfake_detection\train\real"
-train_fake = r"C:\Users\bhoom\datasets\deepfake_detection\train\fake"
-test_real = r"C:\Users\bhoom\datasets\deepfake_detection\test\real"
-test_fake = r"C:\Users\bhoom\datasets\deepfake_detection\test\fake"
+IMG_SIZE = (128, 128, 3)
 
-output = "dataset_reduced"
-os.makedirs(output, exist_ok=True)
+# Load Xception model with smaller input size
+base_model = Xception(weights=None, include_top=False, input_shape=IMG_SIZE)
 
-# Target sizes
-train_size, test_size = 1000, 500  # Per class
+# Add classification layers
+x = GlobalAveragePooling2D()(base_model.output)
+x = Dense(128, activation="relu")(x)
+x = Dense(64, activation="relu")(x)
+output_layer = Dense(1, activation="sigmoid")(x)  # Binary classification
 
-# Function to copy sampled images
-def sample_and_copy(src, dst, num):
-    os.makedirs(dst, exist_ok=True)
-    for img in random.sample(os.listdir(src), num):
-        shutil.copy(os.path.join(src, img), os.path.join(dst, img))
+# Create model
+model = Model(inputs=base_model.input, outputs=output_layer)
 
-# Reduce dataset
-sample_and_copy(train_real, f"{output}/train/real", train_size)
-sample_and_copy(train_fake, f"{output}/train/fake", train_size)
-sample_and_copy(test_real, f"{output}/test/real", test_size)
-sample_and_copy(test_fake, f"{output}/test/fake", test_size)
+# Compile model with reduced learning rate
+model.compile(optimizer=Adam(learning_rate=0.00001), loss="binary_crossentropy", metrics=["accuracy"])
 
-print("Dataset reduced successfully.")
+# ✅ Callbacks: Reduce LR, Early Stopping, and Save Best Model
+callbacks = [
+    ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=2, min_lr=1e-6, verbose=1),  
+    ModelCheckpoint("best_xception_model.keras", save_best_only=True, monitor="val_accuracy", mode="max"),
+    EarlyStopping(monitor="val_loss", patience=4, restore_best_weights=True, verbose=1)  # Stop early if no improvement
+]
+
+# Train model
+model.fit(train_data, epochs=10, validation_data=test_data, callbacks=callbacks)
+
+# Save model
+model.save("xception_model.keras")
+
+print("✅ Model training complete and saved as 'xception_model.keras'")
