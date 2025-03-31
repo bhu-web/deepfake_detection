@@ -1,2 +1,4 @@
-best_xception_model.keras/
-load_dataset.py/
+best_xception_model.keras
+
+__pycache__/
+*.log
