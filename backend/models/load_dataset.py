@@ -26,7 +26,7 @@ def load_and_preprocess(image_path, label, augment=False):
 
     # Apply augmentation only to training data
     if augment:
-        image = data_augmentation(image, training=True)  # ✅ Fix: Pass `training=True`
+        image = data_augmentation(image, training=True)  # ✅ Fix: Pass training=True
 
     return image, label
 
@@ -41,7 +41,7 @@ def create_dataset(real_path, fake_path, num_samples, augment=False):
     dataset = tf.data.Dataset.from_tensor_slices((image_paths, labels))
     dataset = dataset.shuffle(len(image_paths))
     
-    # ✅ Explicitly pass `augment=augment`
+    # ✅ Explicitly pass augment=augment
     dataset = dataset.map(lambda x, y: load_and_preprocess(x, y, augment=augment), 
                           num_parallel_calls=tf.data.AUTOTUNE)
     
