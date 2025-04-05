@@ -28,9 +28,11 @@ async def predict(file: UploadFile = File(...)):
     image = preprocess_image(image)  # Preprocess image
     prediction = model.predict(image)[0][0]  # Get prediction
 
-    # Return result
+    confidence = prediction if prediction > 0.5 else 1 - prediction  # Confidence %
+
+    # Return result with formatted confidence
     result = "Fake" if prediction > 0.5 else "Real"
-    return {"prediction": result, "confidence": float(prediction)}
+    return {"prediction": result, "confidence": f"{confidence * 100:.2f}%"}
 
 # Run the FastAPI server
 if __name__ == "__main__":
